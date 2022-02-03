@@ -50,7 +50,7 @@ public class WorldTile : MonoBehaviour {
         } else {    // if this is the first tile
             _ID = 0;
             _tileCoords = new Vector2(0, 0);
-            _pathDeviation = GetNewDeviation(); // GetNewDeviation() requires _tileNoiseValue to get correct _pathDeviation
+            _pathDeviation = GetNewDeviation();
             _pathDirection = (_pathDeviation != 1) ? new Vector2(0, 1) : new Vector2(1, 0);
         }
 
