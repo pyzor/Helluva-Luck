@@ -1,2 +1,7 @@
 # Helluva Luck
- rng-based mobile game
+(Currently In Development)
+ rng-based mobile game 
+
+![](world.gif)
+
+![](battle.gif)
