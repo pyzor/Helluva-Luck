@@ -16,6 +16,7 @@ public struct CreatureObjectSyncData {
     public VelocityData Velocity;
     public CurrentObjectiveData Objective;
     public TeamMemberData Team;
+    public AttackData AttackData;
 }
 
 [BurstCompile]
@@ -48,6 +49,7 @@ public class CreatureObjectSyncSystem : SystemBase {
             in VelocityData velocity,
             in CurrentObjectiveData objective,
             in TeamMemberData team,
+            in AttackData attackData,
             in ActiveStatusData activeStatus
             ) => {
                 if (!activeStatus.InPool)
@@ -57,7 +59,8 @@ public class CreatureObjectSyncSystem : SystemBase {
                         ActiveStatus = activeStatus,
                         Velocity = velocity,
                         Objective = objective,
-                        Team = team
+                        Team = team,
+                        AttackData = attackData
                     }));
             }).ScheduleParallel(Dependency).Complete();
     }

@@ -1697,9 +1697,9 @@ MonoBehaviour:
     x: 0.05
     y: 0.05
   TestCreatureViewRange: 0.15
-  TestAmount: 5
+  TestAmount: 1
   TestSpawnSpeed: 0.4
-  TestArenaSpeed: 0.2
+  TestArenaSpeed: 0.1
   TestFrequency: 0.1
 --- !u!1 &1896963809
 GameObject:

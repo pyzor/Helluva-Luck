@@ -3,12 +3,10 @@ using UnityEngine;
 
 public class CreatureClass : MonoBehaviour {
     public enum CreatureClassType {
-        Undefined,
         Hellhound,
         Imp
     }
     public enum CreatureSubClassType {
-        Undefined,
         Melee
     }
 

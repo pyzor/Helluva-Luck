@@ -54,8 +54,7 @@ public class QuadrantSystem : SystemBase {
                         TeamID = teamMember.TeamID
                     });
                 }
-            }).ScheduleParallel();
-
+            }).ScheduleParallel(Dependency).Complete();
 
     }
 
@@ -67,10 +66,10 @@ public class QuadrantSystem : SystemBase {
 
     /*  USEFULL FOR DEBUG
      * 
-     *  DebugDraw(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-     *  
-     *  DebugEntityCount(Camera.main.ScreenToWorldPoint(Input.mousePosition), quadrantHashMap);
-     *  
+     *  var pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+     *  DebugDraw(pos);
+     *  DebugEntityCount(pos, QuadrantHashMap);
+     * /
     private static void DebugDraw(float3 pos) {
         float3 indexed = new float3(math.floor(pos.x / _quadrantCellSize), math.floor(pos.y / _quadrantCellSize), 0);
         float3 origin = indexed * _quadrantCellSize;
@@ -79,15 +78,15 @@ public class QuadrantSystem : SystemBase {
         Debug.DrawLine(origin + new float3(_quadrantCellSize, _quadrantCellSize, 0), origin + new float3(_quadrantCellSize, 0, 0));
         Debug.DrawLine(origin + new float3(_quadrantCellSize, _quadrantCellSize, 0), origin + new float3(0, _quadrantCellSize, 0));
     }
-    private static void DebugEntityCount(float3 pos, NativeMultiHashMap<int, QuadrantData> hashMap) {
+    private static void DebugEntityCount(float3 pos, NativeMultiHashMap<int, QuadrantSystemData> hashMap) {
         int key = PositionHash(pos);
         int count = 0;
-        if (hashMap.TryGetFirstValue(key, out QuadrantData q, out NativeMultiHashMapIterator<int> iterator)) {
+        if (hashMap.TryGetFirstValue(key, out QuadrantSystemData q, out NativeMultiHashMapIterator<int> iterator)) {
             do {
                 count += 1;
             } while (hashMap.TryGetNextValue(out q, ref iterator));
         }   
         Debug.Log("Quadrant EntityCount [" + count + "]");
     }
-    */
+    /**/
 }

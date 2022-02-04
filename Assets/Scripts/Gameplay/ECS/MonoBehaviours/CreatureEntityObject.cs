@@ -50,6 +50,7 @@ public class CreatureEntityObject : MonoBehaviour {
             typeof(ActiveStatusData),
             typeof(CurrentObjectiveData),
             typeof(ViewRangeData),
+            typeof(AttackData),
             // SystemDependent
             typeof(TargetPointData),
             typeof(TargetEntityData)
@@ -59,7 +60,7 @@ public class CreatureEntityObject : MonoBehaviour {
         gameObject.SetActive(false);
     }
 
-    public void InitCreature(ClassTypeData classType, float3 pos, float speed, float maxHealth, float viewRange, int team, CurrentObjectiveData objective) {
+    public void InitCreature(ClassTypeData classType, float3 pos, float speed, float maxHealth, float viewRange, int team, CurrentObjectiveData objective, AttackData attackData) {
         if (!Exist)
             return;
 
@@ -79,12 +80,14 @@ public class CreatureEntityObject : MonoBehaviour {
         _handler.EntityManager.SetComponentData(_entity, objective);
         _handler.EntityManager.SetComponentData(_entity, new TargetableData { IsTargetable = !objective.IgnoreTargets });
         _handler.EntityManager.SetComponentData(_entity, new ActiveStatusData { IsActive = true, InPool = false });
+        _handler.EntityManager.SetComponentData(_entity, attackData);
 
         _isActive = true;
         gameObject.SetActive(true);
 
         CreatureClass.UpdateClass(classType);
-        CreatureAnimator.SetColor((team == 0) ? Color.green : Color.red); // Temp Color
+        CreatureAnimator.SetColor((team == 0) ? Color.white : (
+            (classType.ClassType == (int)CreatureClass.CreatureClassType.Imp) ? new Color(0.5f, 0, 1, 1) : new Color(0.4f,0,0.4f,1))); // Temp Coloring
 
         _idleState = true;
         _lastState = CreatureAnimator.STATE_IDLE;
@@ -134,34 +137,41 @@ public class CreatureEntityObject : MonoBehaviour {
         if (!NaNCheck.IsNaN(syncData.Pos))
             transform.position = syncData.Pos;
 
-        if ((syncData.Velocity.speed == 0) || (syncData.Velocity.direction.x == 0 && syncData.Velocity.direction.y == 0)) {
-            if (_idleState) {
-                if (_lastState.x != CreatureAnimator.STATE_IDLE.x) {
-                    _ApplyMaterialBlock = true;
-                    _lastState = CreatureAnimator.STATE_IDLE;
-                    CreatureAnimator.ChangeAnimationState(_lastState, 0.5f);
-                }
-            } else {
-                _idleState = true;
-            }
-        } else {
-            if (_lastState.x != CreatureAnimator.STATE_WALK.x) {
+        if (syncData.AttackData.Attacking) {
+            if (_lastState.x != CreatureAnimator.STATE_ATTACK.x) {
                 _ApplyMaterialBlock = true;
-                _lastState = CreatureAnimator.STATE_WALK;
+                _lastState = CreatureAnimator.STATE_ATTACK;
                 CreatureAnimator.ChangeAnimationState(_lastState);
             }
-
-            if (syncData.Velocity.direction.x > 0 && _lookLeft) {
-                _lookLeft = false;
-                _ApplyMaterialBlock = true;
-                CreatureAnimator.LookLeft(_lookLeft);
-            } else if (syncData.Velocity.direction.x < 0 && !_lookLeft) {
-                _lookLeft = true;
-                _ApplyMaterialBlock = true;
-                CreatureAnimator.LookLeft(_lookLeft);
+        } else { 
+            if ((syncData.Velocity.speed == 0) || (syncData.Velocity.direction.x == 0 && syncData.Velocity.direction.y == 0)) {
+                if (_idleState) {
+                    if (_lastState.x != CreatureAnimator.STATE_IDLE.x) {
+                        _ApplyMaterialBlock = true;
+                        _lastState = CreatureAnimator.STATE_IDLE;
+                        CreatureAnimator.ChangeAnimationState(_lastState, 0.5f);
+                    }
+                } else {
+                    _idleState = true;
+                }
+            } else {
+                if (_lastState.x != CreatureAnimator.STATE_WALK.x) {
+                    _ApplyMaterialBlock = true;
+                    _lastState = CreatureAnimator.STATE_WALK;
+                    CreatureAnimator.ChangeAnimationState(_lastState);
+                }
             }
         }
 
+        if (syncData.Velocity.direction.x > 0 && _lookLeft) {
+            _lookLeft = false;
+            _ApplyMaterialBlock = true;
+            CreatureAnimator.LookLeft(_lookLeft);
+        } else if (syncData.Velocity.direction.x < 0 && !_lookLeft) {
+            _lookLeft = true;
+            _ApplyMaterialBlock = true;
+            CreatureAnimator.LookLeft(_lookLeft);
+        }
 
         if (_ApplyMaterialBlock) {
             _ApplyMaterialBlock = false;

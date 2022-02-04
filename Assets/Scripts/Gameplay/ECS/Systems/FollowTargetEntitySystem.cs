@@ -21,12 +21,9 @@ public class FollowTargetEntitySystem : SystemBase {
             in CurrentObjectiveData objective,
             in ActiveStatusData activeStatus) => {
                 if (activeStatus.IsActive && !objective.IgnoreTargets)
-                    //velocity.direction = math.normalize(targetPoint.Point - translation.Value);
-
                     if (target.TargetEntity != Entity.Null) {
                         velocity.direction = math.normalize(GetComponent<Translation>(target.TargetEntity).Value - translation.Value);
                         //Debug.DrawLine(translation.Value, GetComponent<Translation>(target.TargetEntity).Value, Color.white);
-
                     } else {
                         velocity.direction = float3.zero;
                     }

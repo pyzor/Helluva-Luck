@@ -73,12 +73,18 @@ public class CreatureHandler : MonoBehaviour {
                 testDelta -= TestFrequency;
                 for (int i = 0; i < TestAmount; i++) {
                     SpawnEnemy(
-                        new ClassTypeData { ClassType = Random.Range(0, 2) },
+                        new ClassTypeData { 
+                            ClassType = Random.Range(0, 2), 
+                            SubClassType = (int)CreatureClass.CreatureSubClassType.Melee 
+                        },
                         TestSpawnSpeed,
                         1, // max hp 
                         TestCreatureViewRange);
                     SpawnPlayer(
-                        new ClassTypeData { ClassType = Random.Range(0, 2) },
+                        new ClassTypeData {
+                            ClassType = Random.Range(0, 2),
+                            SubClassType = (int)CreatureClass.CreatureSubClassType.Melee
+                        },
                         TestSpawnSpeed,
                         1, // max hp 
                         TestCreatureViewRange);
@@ -109,7 +115,16 @@ public class CreatureHandler : MonoBehaviour {
             ObjectiveLocation = new float3(t.Value.x + halfBounds.x - halfSize.x, t.Value.y, transform.position.z),
             ObjectiveBounds = new float3(0, rb.Bounds.y, 0)
         };
-        SpawnCreature(classType, pos, speed * rb.Bounds.x, maxHealth, viewRange, (int)Team.Enemy, objective);
+        var attackData = new AttackData {   // TODO get enemy stats
+            Damage = 1, 
+            AttackRange = 0.045f,  
+            AttacksPerSecond = 2f,
+            AttackDelay = 2f / 4f,
+            Attacking = false,
+            HitTarget = false,
+            AttackDelta = 0
+        };
+        SpawnCreature(classType, pos, speed * rb.Bounds.x, maxHealth, viewRange, (int)Team.Enemy, objective, attackData);
     }
     public void SpawnPlayer(ClassTypeData classType, float speed, float maxHealth, float viewRange) {
         var t = PlayerZoneLayoutEntity.GetTranslation();
@@ -125,13 +140,22 @@ public class CreatureHandler : MonoBehaviour {
             ObjectiveLocation = new float3(t.Value.x - halfBounds.x + halfSize.x, t.Value.y, transform.position.z),
             ObjectiveBounds = new float3(0, rb.Bounds.y, 0)
         };
-        SpawnCreature(classType, pos, speed * rb.Bounds.x, maxHealth, viewRange, (int)Team.Player, objective);
+        var attackData = new AttackData {   // TODO get player stats
+            Damage = 1,
+            AttackRange = 0.045f,
+            AttacksPerSecond = 2f,
+            AttackDelay = 2f / 4f,
+            Attacking = false,
+            HitTarget = false,
+            AttackDelta = 0
+        };
+        SpawnCreature(classType, pos, speed * rb.Bounds.x, maxHealth, viewRange, (int)Team.Player, objective, attackData);
     }
-    private void SpawnCreature(ClassTypeData classType, float3 pos, float speed, float maxHealth, float viewRange, int team, CurrentObjectiveData objective) {
+    private void SpawnCreature(ClassTypeData classType, float3 pos, float speed, float maxHealth, float viewRange, int team, CurrentObjectiveData objective, AttackData attackData) {
         var cRef = InstantiateCreature();
         var creature = ByRef(cRef);
         _activeCreaturesMap.Add(creature.EntityKey, cRef);
-        creature.InitCreature(classType, pos, speed, maxHealth, viewRange, team, objective);
+        creature.InitCreature(classType, pos, speed, maxHealth, viewRange, team, objective, attackData);
     }
     public void DespawnCreature(int EntityKey) {
         if (!_activeCreaturesMap.ContainsKey(EntityKey))
@@ -179,7 +203,7 @@ public class CreatureHandler : MonoBehaviour {
                 newObjective,
                 position,
                 math.distance(playerBase_t.Value.y, enemyBase_t.Value.y) * TestArenaSpeed, // TEMP speed
-                1000 // health                
+                3 // health                
                 );
         } else if(objective.ObjectiveID == 1){
             creature.Kill();

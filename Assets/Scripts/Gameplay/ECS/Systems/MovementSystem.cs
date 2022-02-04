@@ -15,7 +15,7 @@ public class MovementSystem : SystemBase {
 
         Entities.ForEach((ref Translation translation, in VelocityData velocity, in ActiveStatusData activeStatus) => {
             if(activeStatus.IsActive)
-                translation.Value += velocity.direction * velocity.speed * deltaTime;
+                translation.Value += velocity.direction * velocity.speed * velocity.multiplier * deltaTime;
         }).ScheduleParallel();
 
     }

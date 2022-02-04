@@ -14,6 +14,7 @@ public class ValidTargetCheckSystem : SystemBase {
 
         Entities.ForEach((
             ref TargetEntityData target,
+            ref AttackData attackData,
             in ActiveStatusData activeStatus) => {
                 if (activeStatus.IsActive)
                     if (target.TargetEntity != Entity.Null) {
@@ -21,9 +22,11 @@ public class ValidTargetCheckSystem : SystemBase {
                             if (!GetComponent<ActiveStatusData>(target.TargetEntity).IsActive ||
                                 !GetComponent<TargetableData>(target.TargetEntity).IsTargetable) {
                                 target.TargetEntity = Entity.Null;
+                                attackData.AttackDelta = 0;
                             }
                         } else {
                             target.TargetEntity = Entity.Null;
+                            attackData.AttackDelta = 0;
                         }
                     }
                     
