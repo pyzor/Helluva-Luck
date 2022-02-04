@@ -656,6 +656,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3ee40644863b29498fc7de00265669c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TargetFrameRate: 60
 --- !u!1 &731497252
 GameObject:
   m_ObjectHideFlags: 0
@@ -931,8 +932,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Speed: 2.5
   JumpHeight: 0.5
-  DiceJumpSpeed: 2
-  DiceJumpHeight: 0.6
 --- !u!1 &1151074897
 GameObject:
   m_ObjectHideFlags: 0
@@ -1722,6 +1721,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayerWorldMovement: {fileID: 1088738945}
   DiceController: {fileID: 2140147189}
+  DiceJumpSpeed: 2
+  DiceJumpHeight: 0.6
 --- !u!1 &1720958302
 GameObject:
   m_ObjectHideFlags: 0
@@ -1952,7 +1953,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2140147185
 Transform:
   m_ObjectHideFlags: 0
@@ -2041,6 +2042,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f23c13e830306454d979771b4b2155ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  PlayerWorldMovement: {fileID: 1088738945}
   DiceSpeed: 12
-  AfterHitPause: 1
+  AfterHitPause: 0.5
+  HitAnimationSpeed: 8
+  _currentDiceState: 0

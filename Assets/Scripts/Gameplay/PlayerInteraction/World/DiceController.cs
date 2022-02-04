@@ -1,115 +1,105 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DiceController : MonoBehaviour {
 
-
-    //enum
     private enum DiceState {
-        IDLE,
-        ROLLING,    // Rolling 
-        HIT,        // Stop dice and get value
-        DISABLED
+        DISABLED,
+        ROLLING, 
+        HIT        // Stop dice and get value
     }
 
+    /*  PROPERTY_NUMBER_ANIMATION
+        X - initial number
+        Y - max number
+        Z - frames per second
+        W - time
+     */
+    private static readonly int MATERIAL_PROPERTY_NUMBER_ANIMATION;
+    private static readonly int MATERIAL_PROPERTY_STOP_ANIMATION;
 
-    //fields
-    [SerializeField] private PlayerWorldMovement PlayerWorldMovement;
+    static DiceController() {
+        MATERIAL_PROPERTY_NUMBER_ANIMATION = Shader.PropertyToID("_NumberAnimation");
+        MATERIAL_PROPERTY_STOP_ANIMATION = Shader.PropertyToID("_StopAnimation");
+    }
+
     [SerializeField] private float DiceSpeed = 6;
-    [SerializeField] private float AfterHitPause = 1;
-    //[SerializeField] private float HitAnimationSpeed = 5f;
+    [SerializeField] private float AfterHitPause = 0.5f;
+    [SerializeField] private float HitAnimationSpeed = 8f;
 
-    private DiceState _currentDiceState;
+    [SerializeField] private DiceState _currentDiceState;
 
-    private float _diceDelta;
-    private float _lastDiceRoll;
+    private MeshRenderer _meshRenderer;
+    private MaterialPropertyBlock _propertyBlock;
+
+    private float _diceTime;
     private float _diceShaderRoll;
+    private int _lastDiceRoll;
 
     public float LastDiceRoll { get { return _lastDiceRoll; } }
-    public bool DiceEnabled {
-        get { return _currentDiceState != DiceState.DISABLED; }
-        set {
-            if (value) {
-                if(_currentDiceState == DiceState.DISABLED) {
-                    _currentDiceState = DiceState.IDLE;
-                }
-            } else {
-                _currentDiceState = DiceState.DISABLED;
-                _diceDelta = 0;
-                // TODO Reset transform 
-            }
-        }
-    }
-    public bool DiceRolling { get { return _currentDiceState == DiceState.ROLLING; } }
+    public bool IsRolling { get { return _currentDiceState == DiceState.ROLLING; } }
+    public bool IsReadyToRoll { get { return _currentDiceState == DiceState.DISABLED; } }
 
-    //methods
     private void Awake() {
-        if(PlayerWorldMovement == null)
-            PlayerWorldMovement = GameObject.Find("Player").GetComponent<PlayerWorldMovement>();
-    }
+        _meshRenderer = GetComponent<MeshRenderer>();
+        _propertyBlock = new MaterialPropertyBlock();
 
-    void Start() {
-        _currentDiceState = DiceState.IDLE;
-    }
-
-    public bool IsReadyToRoll() {
-        if (_currentDiceState == DiceState.IDLE)
-            return true;
-        return false;
+        _currentDiceState = DiceState.DISABLED;
+        gameObject.SetActive(false);
     }
 
     public void StartRolling() {
+        if (_currentDiceState != DiceState.DISABLED)
+            return;
+
+        gameObject.SetActive(true);
         _currentDiceState = DiceState.ROLLING;
-        _diceDelta = 0;
-        _diceShaderRoll = 1;
+        _diceTime = Time.timeSinceLevelLoad;
+        _diceShaderRoll = UnityEngine.Random.Range(1, 7);
+
         UpdateDiceRoll();
+        ApplyPropertyBlock();
     }
 
-    public void Hit() {
+
+    public IEnumerator Hit(Action<int> onRollEnd) {
         _currentDiceState = DiceState.HIT;
-        _lastDiceRoll = _diceShaderRoll;
-        _diceDelta = 0;
-    }
 
-    private void UpdateDiceRoll() {
-        GetComponent<MeshRenderer>().material.SetFloat("_Number", _diceShaderRoll);
-    }
+        float diceAnimationDelta = 0;
+        float dt = 1f / 60f;
+        Vector3 scale = transform.localScale;
 
-    void Update() {
-        switch(_currentDiceState) {
-            case DiceState.IDLE: {
-                // go
-                return;
-            }
-            case DiceState.ROLLING: {
-                _diceDelta += Time.deltaTime * DiceSpeed;
-                if(_diceDelta >= 6) {
-                    _diceDelta -= 6;
-                }
-                float roll = Mathf.Floor(_diceDelta) + 1;
-                if(_diceShaderRoll != roll) {
-                    _diceShaderRoll = roll;
-                    UpdateDiceRoll();
-                }
-                break;
-            }
-            case DiceState.HIT: {
-                // hit animation
+        while (diceAnimationDelta <= 1) { // animation
+            float scaleMulty = (1 - Mathf.Sin(diceAnimationDelta * Mathf.PI) * 0.5f);
+            float horizontalScaleMulty = 1 + 1 - scaleMulty;
+            transform.localScale = new Vector3(scale.x * horizontalScaleMulty, scale.y * scaleMulty, scale.z * horizontalScaleMulty);
 
-                _diceDelta += Time.deltaTime;
-
-                //animation uses Mathf.Min(_diceDelta * HitAnimationSpeed, 1);
-
-                if(_diceDelta >= AfterHitPause) {
-                    PlayerWorldMovement.MovePlayer((int)_lastDiceRoll);
-                    _currentDiceState = DiceState.IDLE;
-                    gameObject.SetActive(false); // TODO
-                }
-
-                break;
-            }
+            diceAnimationDelta += dt * HitAnimationSpeed;
+            yield return new WaitForSeconds(dt);
         }
+        transform.localScale = scale;
 
+        UpdateDiceRoll(Time.timeSinceLevelLoad);
+        ApplyPropertyBlock();
+        float timePassed = Time.timeSinceLevelLoad - _diceTime;
+        _lastDiceRoll = Mathf.FloorToInt((_diceShaderRoll + (timePassed * DiceSpeed) - 1f) % 6) + 1;
+        
+        yield return new WaitForSeconds(AfterHitPause); // pause
+
+        onRollEnd(_lastDiceRoll);
+        _currentDiceState = DiceState.DISABLED;
+        gameObject.SetActive(false);
     }
+
+    private void ApplyPropertyBlock() {
+        _meshRenderer.SetPropertyBlock(_propertyBlock);
+    }
+
+    private void UpdateDiceRoll(float stopAnimation = -1) {
+        _propertyBlock.SetVector(MATERIAL_PROPERTY_NUMBER_ANIMATION, new Vector4(_diceShaderRoll, 6, DiceSpeed, _diceTime));
+        _propertyBlock.SetFloat(MATERIAL_PROPERTY_STOP_ANIMATION, stopAnimation);
+    }
+
 }

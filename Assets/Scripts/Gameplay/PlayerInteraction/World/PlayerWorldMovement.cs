@@ -6,8 +6,6 @@ public class PlayerWorldMovement : MonoBehaviour {
 
     [SerializeField] private float Speed = 3;
     [SerializeField] private float JumpHeight = 1;
-    [SerializeField] private float DiceJumpSpeed = 2; 
-    [SerializeField] private float DiceJumpHeight = 1;
 
 
     //[SerializeField] private LavaOffset lavaOffset;
@@ -26,12 +24,6 @@ public class PlayerWorldMovement : MonoBehaviour {
         _playerNextPosition = _playerCurrentPosition;
     }
 
-
-    public void DiceJump(float dt) {
-        transform.localPosition = new Vector3(0, 0.3f + DiceJumpHeight * Mathf.Sin(Mathf.PI * dt), 0);
-    }
-
-
     public void MovePlayer(int amount) {
         if (amount <= 0)
             return;
@@ -41,12 +33,9 @@ public class PlayerWorldMovement : MonoBehaviour {
         _currentWorldTile = WorldGenerationMaster.Instance.GetTile(_playerCurrentPosition);
         _nextWorldTile = WorldGenerationMaster.Instance.GetTile(_playerCurrentPosition+1);
     }
+
     public void AddSteps(int amount) {
         _playerNextPosition += amount;
-    }
-
-    public float GetDiceJumpSpeed() {
-        return DiceJumpSpeed;
     }
 
     public bool IsMoving() {

@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerDiceInputHandler : MonoBehaviour {
+public class PlayerDiceInteraction : MonoBehaviour {
 
     [SerializeField] private PlayerWorldMovement PlayerWorldMovement;
     [SerializeField] private DiceController DiceController;
+
+    [SerializeField] private float DiceJumpSpeed = 2;
+    [SerializeField] private float DiceJumpHeight = 0.6f;
 
     private void Awake() {
         if (PlayerWorldMovement == null)
@@ -14,15 +17,15 @@ public class PlayerDiceInputHandler : MonoBehaviour {
             DiceController = GameObject.Find("Dice").GetComponent<DiceController>();
     }
 
-    private bool _coroutineStarted = false;
+    private bool _coroutineExist = false;
 
     public void HitTheDice() {
-        if(DiceController.DiceRolling && !_coroutineStarted)
+        if(DiceController.IsRolling && !_coroutineExist)
             StartCoroutine(DiceJump());
     }
 
     private IEnumerator DiceJump() {
-        _coroutineStarted = true;
+        _coroutineExist = true;
         bool hitPerformed = false;
 
         float lastTime = Time.realtimeSinceStartup;
@@ -30,18 +33,21 @@ public class PlayerDiceInputHandler : MonoBehaviour {
 
         while (jump_dt <= 1) {
             currentTime = Time.realtimeSinceStartup;
-            jump_dt += (currentTime - lastTime) * PlayerWorldMovement.GetDiceJumpSpeed();
+            jump_dt += (currentTime - lastTime) * DiceJumpSpeed;
             lastTime = currentTime;
 
-            if(jump_dt >= 0.5f && !hitPerformed) {
+            if (jump_dt >= 0.5f && !hitPerformed && DiceController.IsRolling) {
                 hitPerformed = true;
-                DiceController.Hit();
+                StartCoroutine(DiceController.Hit((int roll) => {
+                    PlayerWorldMovement.MovePlayer(roll);
+                }));
             }
-            PlayerWorldMovement.DiceJump(jump_dt);
+
+            PlayerWorldMovement.transform.localPosition = new Vector3(0, 0.3f + DiceJumpHeight * Mathf.Sin(Mathf.PI * jump_dt), 0);
 
             yield return null;
         }
-        _coroutineStarted = false;
+        _coroutineExist = false;
     }
 
     void Start() {
@@ -49,8 +55,7 @@ public class PlayerDiceInputHandler : MonoBehaviour {
     }
 
     void Update() {
-        if(DiceController.DiceEnabled && DiceController.IsReadyToRoll() && !PlayerWorldMovement.IsMoving()) {
-            DiceController.gameObject.SetActive(true);
+        if(DiceController.IsReadyToRoll && !PlayerWorldMovement.IsMoving()) {
             DiceController.StartRolling();
         }
         
