@@ -7,7 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [BurstCompile]
-[UpdateBefore(typeof(KillTargetCreatureSystem))]
+[UpdateBefore(typeof(AttackTargetCreatureSystem))]
 public class FollowTargetPointSystem : SystemBase {
 
     protected override void OnUpdate() {

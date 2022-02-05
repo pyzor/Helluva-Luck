@@ -27,10 +27,6 @@ public class CornerTileBehavior : WorldTileBehavior {
 
     public override void Update() { }
 
-    public override void UpdateMaterial(MeshRenderer meshRenderer) {
-        meshRenderer.SetPropertyBlock(_propertyBlock);
-    }
-
     protected override void Init() {
         _worldTile.ChangeDeviation();
         _rotationAngle = Vector2.SignedAngle(Vector2.up, _worldTile.PathDirection);

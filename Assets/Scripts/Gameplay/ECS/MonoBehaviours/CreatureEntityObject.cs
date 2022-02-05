@@ -8,7 +8,6 @@ using Helpers;
 
 public struct CreatureEntityObjectRef {
     public int I;
-    public int TestKey;
 }
 
 public class CreatureEntityObject : MonoBehaviour {
@@ -20,12 +19,11 @@ public class CreatureEntityObject : MonoBehaviour {
 
     private Entity _entity = Entity.Null;
     public bool Exist { get { return _entity != Entity.Null; } }
-
-    private CreatureHandler _handler = null;
-
     public int EntityKey {
         get { return _entity.Index; }
     }
+
+    private CreatureHandler _handler = null;
 
     private float2 _lastState;
     private bool _idleState;
@@ -116,12 +114,6 @@ public class CreatureEntityObject : MonoBehaviour {
         _handler.EntityManager.SetComponentData(_entity, new TargetEntityData { TargetEntity = Entity.Null });
     }
 
-    public void Kill() {
-        _handler.EntityManager.SetComponentData(_entity, new ActiveStatusData { IsActive = false, InPool = true });
-        gameObject.SetActive(false);
-        DebugCreatureAmount.CreatureAmount -= 1; // TODO REMOVE_DEBUG
-    }
-
     public void SyncEntity(CreatureObjectSyncData syncData) {
         if (!syncData.ActiveStatus.IsActive) {
             _isActive = false;
@@ -178,49 +170,12 @@ public class CreatureEntityObject : MonoBehaviour {
             CreatureAnimator.ApplyMaterialBlock();
         }
     }
-    /*
-    private void SynchronizeWithEntity() {
-        var status = _handler.EntityManager.GetComponentData<ActiveStatusData>(_entity);
-        if (!status.IsActive) {
-            _isActive = false;
-            // TODO return to entity pool
-            OnDeath();
-            return;
-        }
 
-        var objectiveStatus = _handler.EntityManager.GetComponentData<ObjectiveStatusData>(_entity);
-        if(objectiveStatus.Status == 1) {
-            _handler.OnObjectiveComplete(this,
-                _handler.EntityManager.GetComponentData<CurrentObjectiveData>(_entity),
-                _handler.EntityManager.GetComponentData<TeamMemberData>(_entity)
-                );
-            return;
-        }
-
-        var pos = _handler.EntityManager.GetComponentData<Translation>(_entity).Value;
-        if(!IsNaN(pos)) // IsNaN Check
-            transform.position = pos;
-
-        var velocityData = _handler.EntityManager.GetComponentData<VelocityData>(_entity);
-
-        if ((velocityData.speed == 0) || (velocityData.direction.x == 0 && velocityData.direction.y == 0)) {
-            if (_isIdle) {
-                CreatureAnimator.Idle();
-            } else {
-                _isIdle = true;
-            }
-        } else {
-            CreatureAnimator.Walk();
-            _isIdle = false;
-        }
-
-        // turn only if moving
-        if(velocityData.direction.x < 0)
-            CreatureAnimator.LookLeft(true);
-        else if (velocityData.direction.x > 0)
-            CreatureAnimator.LookLeft(false);
+    public void Kill() {
+        _handler.EntityManager.SetComponentData(_entity, new ActiveStatusData { IsActive = false, InPool = true });
+        gameObject.SetActive(false);
+        DebugCreatureAmount.CreatureAmount -= 1; // TODO REMOVE_DEBUG
     }
-    */
 
     public void DestroyEntity() {
         _handler.EntityManager.DestroyEntity(_entity);

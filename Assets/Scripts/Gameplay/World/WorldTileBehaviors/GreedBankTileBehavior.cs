@@ -38,10 +38,6 @@ public class GreedBankTileBehavior : WorldTileBehavior {
 
     public override void Update() { }
 
-    public override void UpdateMaterial(MeshRenderer meshRenderer) {
-        meshRenderer.SetPropertyBlock(_propertyBlock);
-    }
-
     protected override void Init() {
         _particleSystem = Object.Instantiate(WorldTileResources.Instance.GetTileParticles("bankTile_miss"), _worldTile.transform);
         _particleSystem.transform.localPosition = Vector3.up * 0.5f;

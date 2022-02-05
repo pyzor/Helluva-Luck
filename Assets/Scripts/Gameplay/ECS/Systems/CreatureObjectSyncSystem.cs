@@ -20,6 +20,7 @@ public struct CreatureObjectSyncData {
 }
 
 [BurstCompile]
+[UpdateInGroup(typeof(LateSimulationSystemGroup), OrderFirst = true)]
 public class CreatureObjectSyncSystem : SystemBase {
 
     public static NativeList<CreatureObjectSyncData> SyncData;
@@ -43,7 +44,7 @@ public class CreatureObjectSyncSystem : SystemBase {
 
         NativeList<CreatureObjectSyncData>.ParallelWriter writer = SyncData.AsParallelWriter();
 
-        Entities.WithoutBurst().WithAll<CreatureTag>().ForEach((
+        Entities.WithAll<CreatureTag>().ForEach((
             Entity e,
             in Translation translation,
             in VelocityData velocity,

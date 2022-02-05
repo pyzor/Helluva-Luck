@@ -39,10 +39,6 @@ public class ChangeDirectionTileBehavior : WorldTileBehavior {
     }
 
     public override void Update() { }
-
-    public override void UpdateMaterial(MeshRenderer meshRenderer) {
-        meshRenderer.SetPropertyBlock(_propertyBlock);
-    }
     
     protected override void Init() {
         _particleSystem = UnityEngine.Object.Instantiate(WorldTileResources.Instance.GetTileParticles("changeDirTile_idle"), _worldTile.transform);

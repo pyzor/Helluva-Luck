@@ -25,10 +25,6 @@ public class WrathFightTileBehavior : WorldTileBehavior {
 
     public override void Update() { }
 
-    public override void UpdateMaterial(MeshRenderer meshRenderer) {
-        meshRenderer.SetPropertyBlock(_propertyBlock);
-    }
-
     protected override void Init() {
         _propertyBlock.SetFloat("_TileIndex", 7);
 

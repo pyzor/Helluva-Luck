@@ -10,73 +10,30 @@ using UnityEngine.UI;
 
 public class LayoutEntityObject : MonoBehaviour {
 
-
     [SerializeField] private RectTransform RectTransform;
     [SerializeField] private CanvasScaler CanvasScaler;
 
+    private float3 _position;
+    private float2 _rectBounds;
 
-    private Entity _entity = Entity.Null;
-    private EntityManager _entityManager;
-
-    public bool Exist {
-        get { return _entity != Entity.Null; }
-    }
-
-    private Translation translation;
-    private RectBoundsData rectBoundsData;
-
-    public Translation GetTranslation() {
-        return translation;
-    }
-    public RectBoundsData GetRectBoundsData() {
-        return rectBoundsData;
-    }
+    public float3 Position { get { return _position; } }
+    public float2 RectBounds { get { return _rectBounds; } }
 
     private void Awake() {
-        FirstSetup();
-    }
-
-    private void FirstSetup() {
-        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-        _entity = _entityManager.CreateEntity(
-            typeof(LayoutTag),
-            typeof(Translation),
-            typeof(RectBoundsData)
-            );
-        //_entityManager.SetName(_entity, gameObject.name + "'s LayoutEntity");
-
-
-        //print(gameObject.name + "'s FirstSetup()");
         OnLayoutUpdate();
     }
 
     private void OnLayoutUpdate() {
-        try {
-            translation = new Translation {
-                Value = RectTransform.position
-            };
-            rectBoundsData = new RectBoundsData {
-                Bounds = new float2(RectTransform.rect.width * RectTransform.lossyScale.x, RectTransform.rect.height * RectTransform.lossyScale.y)
-            };
-
-            _entityManager.SetComponentData(_entity, translation);
-            _entityManager.SetComponentData(_entity, rectBoundsData);
-            //print(gameObject.name + "'s OnLayoutUpdate() - _entity updated!");
-        } catch (ObjectDisposedException) {
-            //print(gameObject.name+ "'s OnLayoutUpdate() - ObjectDisposedException Catch");
-            gameObject.SetActive(false);
-        }
+        _position = RectTransform.position;
+        _rectBounds = new float2(RectTransform.rect.width * RectTransform.lossyScale.x, RectTransform.rect.height * RectTransform.lossyScale.y);
     }
 
     private void Update() {
-        if (!Exist)
-            return;
-
-        if (!Compare(translation.Value, RectTransform.position))
+        if (!Compare(_position, RectTransform.position))
             OnLayoutUpdate();
     }
 
-    private bool Compare(float3 a, float3 b) {
+    private static bool Compare(float3 a, float3 b) {
         return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
     }
 }

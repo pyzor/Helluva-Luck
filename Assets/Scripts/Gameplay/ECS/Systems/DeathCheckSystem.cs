@@ -7,6 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [BurstCompile]
+[UpdateAfter(typeof(AttackTargetCreatureSystem))]
 public class DeathCheckSystem : SystemBase {
 
     protected override void OnUpdate() {

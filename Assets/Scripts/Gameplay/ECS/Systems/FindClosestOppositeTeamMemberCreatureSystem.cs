@@ -17,7 +17,7 @@ public class FindClosestOppositeTeamMemberCreatureSystem : SystemBase {
 
         Entities.WithReadOnly(quadrantHashMap).WithAll<CreatureTag>().ForEach((
             ref TargetEntityData target,
-            in Translation translation,
+            in Translation t,
             in TeamMemberData team,
             in ViewRangeData viewRange,
             in CurrentObjectiveData objective,
@@ -28,27 +28,18 @@ public class FindClosestOppositeTeamMemberCreatureSystem : SystemBase {
                         Entity closestEntity = Entity.Null;
                         float squaredDistance = float.MaxValue;
 
-                        NativeArray<int> hashes = new NativeArray<int>(9, Allocator.Temp);
+                        var topL = QuadrantSystem.PositionHash(t.Value + new float3(-viewRange.Value, +viewRange.Value, 0));
+                        var topR = QuadrantSystem.PositionHash(t.Value + new float3(+viewRange.Value, +viewRange.Value, 0));
+                        var botL = QuadrantSystem.PositionHash(t.Value + new float3(-viewRange.Value, -viewRange.Value, 0));
 
-                        hashes[0] = QuadrantSystem.PositionHash(translation.Value);
-                        hashes[1] = QuadrantSystem.PositionHash(translation.Value + new float3(0, +viewRange.Value, 0));
-                        hashes[2] = QuadrantSystem.PositionHash(translation.Value + new float3(0, -viewRange.Value, 0));
-                        hashes[3] = QuadrantSystem.PositionHash(translation.Value + new float3(+viewRange.Value, 0, 0));
-                        hashes[4] = QuadrantSystem.PositionHash(translation.Value + new float3(-viewRange.Value, 0, 0));
-                        hashes[5] = QuadrantSystem.PositionHash(translation.Value + new float3(+viewRange.Value, +viewRange.Value, 0));
-                        hashes[6] = QuadrantSystem.PositionHash(translation.Value + new float3(-viewRange.Value, +viewRange.Value, 0));
-                        hashes[7] = QuadrantSystem.PositionHash(translation.Value + new float3(+viewRange.Value, -viewRange.Value, 0));
-                        hashes[8] = QuadrantSystem.PositionHash(translation.Value + new float3(-viewRange.Value, -viewRange.Value, 0));
+                        float horizontalCount = (topR - topL) + 1;
+                        float verticalCount = ((topL - botL) / (float)QuadrantSystem.HashYScale) + 1;
 
-                        hashes.Sort();
-                        CheckForTargets(hashes[0], quadrantHashMap, team.TeamID, translation.Value, ref closestEntity, ref squaredDistance);
-                        for (int i = 1; i < 9; i++) {
-                            if (hashes[i] != hashes[i - 1]) {
-                                CheckForTargets(hashes[i], quadrantHashMap, team.TeamID, translation.Value, ref closestEntity, ref squaredDistance);
+                        for (int i = 0; i < horizontalCount; i++) {
+                            for (int j = 0; j < verticalCount; j++) {
+                                CheckForTargets(topL + i - j * QuadrantSystem.HashYScale, quadrantHashMap, team.TeamID, t.Value, ref closestEntity, ref squaredDistance);
                             }
                         }
-
-                        hashes.Dispose();
 
                         target.TargetEntity = (squaredDistance > (viewRange.Value * viewRange.Value)) ? Entity.Null : closestEntity;
                     }
@@ -58,7 +49,7 @@ public class FindClosestOppositeTeamMemberCreatureSystem : SystemBase {
     private static void CheckForTargets(int hashKey, NativeMultiHashMap<int, QuadrantSystemData> quadrantHashMap, int TeamID, float3 pos, ref Entity closestEntity, ref float squaredDistance) {
         if (quadrantHashMap.TryGetFirstValue(hashKey, out QuadrantSystemData item, out NativeMultiHashMapIterator<int> it)) {
             do {
-                if (TeamID != item.TeamID) {
+                if (TeamID != item.TeamID && item.IsTargetable) {
                     if (closestEntity == Entity.Null) {
                         closestEntity = item.Entity;
                         squaredDistance = math.distancesq(pos, item.Position);

@@ -13,12 +13,10 @@ public class CopyLayoutEntityTest : MonoBehaviour {
     [SerializeField] private LayoutEntityObject LayoutEntity;
 
     private void Update() {
-        if (!LayoutEntity.Exist)
-            return;
 
-        var t = LayoutEntity.GetTranslation();
-        var b = LayoutEntity.GetRectBoundsData();
-        transform.position = new float3(t.Value.xy, transform.position.z);
-        transform.localScale = new float3(b.Bounds, 1);
+        var p = LayoutEntity.Position;
+        var rb = LayoutEntity.RectBounds;
+        transform.position = new float3(p.xy, transform.position.z);
+        transform.localScale = new float3(rb, 1);
     }
 }

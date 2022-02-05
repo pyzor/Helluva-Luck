@@ -27,7 +27,6 @@ public class WorldGenerationMaster : MonoBehaviour {
 
     public void Init(int seed) {
         Random.InitState(seed);
-        SimplexNoise.Seed = seed;
 
         ClearActiveTiles();
         ClearTilesPool();
@@ -51,7 +50,7 @@ public class WorldGenerationMaster : MonoBehaviour {
         }
 
         tile.Init(_lastTile);
-        tile.SetBehavior(_randomBehaviorSystem.GetBehavior(GetRollValue(tile)).Create());
+        tile.SetBehavior(_randomBehaviorSystem.GetBehavior(GetRollValue(tile)));
 
         _lastTile = tile;
         _activeTiles.Add(_lastTile);

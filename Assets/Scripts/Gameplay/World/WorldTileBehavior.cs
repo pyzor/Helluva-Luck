@@ -18,6 +18,10 @@ public abstract class WorldTileBehavior {
         Init();
     }
 
+    public void UpdateMaterial(MeshRenderer meshRenderer) {
+        meshRenderer.SetPropertyBlock(_propertyBlock);
+    }
+
     public abstract WorldTileBehavior Create();
 
     public abstract void OnAction();
@@ -26,7 +30,6 @@ public abstract class WorldTileBehavior {
     public abstract void OnEnable();
     public abstract void OnDisable();
     public abstract void Update();
-    public abstract void UpdateMaterial(MeshRenderer meshRenderer);
 
     protected abstract void Init();
 

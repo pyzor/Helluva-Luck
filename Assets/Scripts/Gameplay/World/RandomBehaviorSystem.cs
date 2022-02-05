@@ -42,7 +42,7 @@ public class RandomBehaviorSystem {
         for(int i = 0; i < _entries.Count; i++) {
             var entry = _entries[i];
             if(roll <= entry.CumulativeProbability) {
-                return entry.Behavior;
+                return entry.Behavior.Create();
             }
         }
 

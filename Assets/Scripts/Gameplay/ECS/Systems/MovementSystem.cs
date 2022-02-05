@@ -7,6 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [BurstCompile]
+[UpdateBefore(typeof(QuadrantSystem))]
 public class MovementSystem : SystemBase {
 
     protected override void OnUpdate() {

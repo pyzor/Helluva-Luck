@@ -25,9 +25,6 @@ public class CreatureHandler : MonoBehaviour {
     [SerializeField] private GameObject UniversalCreaturePrefab;
     [SerializeField] private float2 CreatureSize;
 
-    //private Queue<CreatureEntityObject> _creaturePool;
-
-
     private List<CreatureEntityObject> _creatures;
 
     private NativeQueue<CreatureEntityObjectRef> _creaturePoolNative;
@@ -50,27 +47,27 @@ public class CreatureHandler : MonoBehaviour {
     [SerializeField] private float TestArenaSpeed = 0.05f;
     [SerializeField] private float TestFrequency = 0.25f;
 
-    private float testDelta = 0;
-    private bool TestToggle = false;
+    private float _testDelta = 0;
+    private bool _testToggle = false;
     public void RestartTest() {
-        testDelta = 0;
+        _testDelta = 0;
         CreatureObjectSyncSystem.SyncData.Clear();
 
         KillCreatures();
         DebugCreatureAmount.CreatureAmount = 0;
     }
     public void Test() {
-        TestToggle = !TestToggle;
-        if (TestToggle) {
-            testDelta = 0;
+        _testToggle = !_testToggle;
+        if (_testToggle) {
+            _testDelta = 0;
         }
     }
 
     private void Update() {
-        if (TestToggle) {
-            testDelta += Time.deltaTime;
-            if (testDelta >= TestFrequency) {
-                testDelta -= TestFrequency;
+        if (_testToggle) {
+            _testDelta += Time.deltaTime;
+            if (_testDelta >= TestFrequency) {
+                _testDelta -= TestFrequency;
                 for (int i = 0; i < TestAmount; i++) {
                     SpawnEnemy(
                         new ClassTypeData { 
@@ -95,25 +92,24 @@ public class CreatureHandler : MonoBehaviour {
         SyncEntities();
     }
 
-
     public void Init() {
         _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         ClearCreatures();
     }
 
     public void SpawnEnemy(ClassTypeData classType, float speed, float maxHealth, float viewRange) {
-        var t = EnemyZoneLayoutEntity.GetTranslation();
-        var rb = EnemyZoneLayoutEntity.GetRectBoundsData();
+        var p = EnemyZoneLayoutEntity.Position;
+        var rb = EnemyZoneLayoutEntity.RectBounds;
 
-        float2 halfBounds = rb.Bounds * 0.5f;
+        float2 halfBounds = rb * 0.5f;
         float2 halfSize = CreatureSize * 0.5f;
-        var pos = new float3(t.Value.x - halfBounds.x - halfSize.x, Random.Range(t.Value.y - halfBounds.y, t.Value.y + halfBounds.y), transform.position.z);
+        var pos = new float3(p.x - halfBounds.x - halfSize.x, Random.Range(p.y - halfBounds.y, p.y + halfBounds.y), transform.position.z);
         var objective = new CurrentObjectiveData {
             Status = 0,
             ObjectiveID = 0,
             IgnoreTargets = true,
-            ObjectiveLocation = new float3(t.Value.x + halfBounds.x - halfSize.x, t.Value.y, transform.position.z),
-            ObjectiveBounds = new float3(0, rb.Bounds.y, 0)
+            ObjectiveLocation = new float3(p.x + halfBounds.x - halfSize.x, p.y, transform.position.z),
+            ObjectiveBounds = new float3(0, rb.y, 0)
         };
         var attackData = new AttackData {   // TODO get enemy stats
             Damage = 1, 
@@ -124,21 +120,21 @@ public class CreatureHandler : MonoBehaviour {
             HitTarget = false,
             AttackDelta = 0
         };
-        SpawnCreature(classType, pos, speed * rb.Bounds.x, maxHealth, viewRange, (int)Team.Enemy, objective, attackData);
+        SpawnCreature(classType, pos, speed * rb.x, maxHealth, viewRange, (int)Team.Enemy, objective, attackData);
     }
     public void SpawnPlayer(ClassTypeData classType, float speed, float maxHealth, float viewRange) {
-        var t = PlayerZoneLayoutEntity.GetTranslation();
-        var rb = PlayerZoneLayoutEntity.GetRectBoundsData();
+        var p = PlayerZoneLayoutEntity.Position;
+        var rb = PlayerZoneLayoutEntity.RectBounds;
 
-        float2 halfBounds = rb.Bounds * 0.5f;
+        float2 halfBounds = rb * 0.5f;
         float2 halfSize = CreatureSize * 0.5f;
-        var pos = new float3(t.Value.x + halfBounds.x + halfSize.x, Random.Range(t.Value.y - halfBounds.y, t.Value.y + halfBounds.y), transform.position.z);
+        var pos = new float3(p.x + halfBounds.x + halfSize.x, Random.Range(p.y - halfBounds.y, p.y + halfBounds.y), transform.position.z);
         var objective = new CurrentObjectiveData {
             Status = 0,
             ObjectiveID = 0,
             IgnoreTargets = true,
-            ObjectiveLocation = new float3(t.Value.x - halfBounds.x + halfSize.x, t.Value.y, transform.position.z),
-            ObjectiveBounds = new float3(0, rb.Bounds.y, 0)
+            ObjectiveLocation = new float3(p.x - halfBounds.x + halfSize.x, p.y, transform.position.z),
+            ObjectiveBounds = new float3(0, rb.y, 0)
         };
         var attackData = new AttackData {   // TODO get player stats
             Damage = 1,
@@ -149,7 +145,7 @@ public class CreatureHandler : MonoBehaviour {
             HitTarget = false,
             AttackDelta = 0
         };
-        SpawnCreature(classType, pos, speed * rb.Bounds.x, maxHealth, viewRange, (int)Team.Player, objective, attackData);
+        SpawnCreature(classType, pos, speed * rb.x, maxHealth, viewRange, (int)Team.Player, objective, attackData);
     }
     private void SpawnCreature(ClassTypeData classType, float3 pos, float speed, float maxHealth, float viewRange, int team, CurrentObjectiveData objective, AttackData attackData) {
         var cRef = InstantiateCreature();
@@ -170,10 +166,10 @@ public class CreatureHandler : MonoBehaviour {
     public void OnObjectiveComplete(CreatureEntityObject creature, CurrentObjectiveData objective, TeamMemberData team) {
         if (objective.ObjectiveID == 0) {
 
-            Translation playerBase_t = PlayerBaseLayoutEntity.GetTranslation();
-            RectBoundsData playerBase_rb = PlayerBaseLayoutEntity.GetRectBoundsData();
-            Translation enemyBase_t = EnemyBaseLayoutEntity.GetTranslation();
-            RectBoundsData enemyBase_rb = EnemyBaseLayoutEntity.GetRectBoundsData();
+            var playerBase_p = PlayerBaseLayoutEntity.Position;
+            var playerBase_rb = PlayerBaseLayoutEntity.RectBounds;
+            var enemyBase_p = EnemyBaseLayoutEntity.Position;
+            var enemyBase_rb = EnemyBaseLayoutEntity.RectBounds;
 
             CurrentObjectiveData newObjective = new CurrentObjectiveData {
                 Status = 0,
@@ -184,25 +180,25 @@ public class CreatureHandler : MonoBehaviour {
 
             float2 halfSize = CreatureSize * 0.5f;
             if (team.TeamID == (int)Team.Player) {
-                newObjective.ObjectiveLocation = new float3(enemyBase_t.Value.xy, transform.position.z);
-                newObjective.ObjectiveBounds = new float3(enemyBase_rb.Bounds, 0);
-                float halfXbounds = playerBase_rb.Bounds.x * 0.5f;
-                position.x = Random.Range(playerBase_t.Value.x - halfXbounds + halfSize.x,
-                                          playerBase_t.Value.x + halfXbounds - halfSize.x);
-                position.y = playerBase_t.Value.y;
+                newObjective.ObjectiveLocation = new float3(enemyBase_p.xy, transform.position.z);
+                newObjective.ObjectiveBounds = new float3(enemyBase_rb, 0);
+                float halfXbounds = playerBase_rb.x * 0.5f;
+                position.x = Random.Range(playerBase_p.x - halfXbounds + halfSize.x,
+                                          playerBase_p.x + halfXbounds - halfSize.x);
+                position.y = playerBase_p.y;
             } else {
-                newObjective.ObjectiveLocation = new float3(playerBase_t.Value.xy, transform.position.z);
-                newObjective.ObjectiveBounds = new float3(playerBase_rb.Bounds, 0);
-                float halfXbounds = enemyBase_rb.Bounds.x * 0.5f;
-                position.x = Random.Range(enemyBase_t.Value.x - halfXbounds + halfSize.x,
-                                          enemyBase_t.Value.x + halfXbounds - halfSize.x);
-                position.y = enemyBase_t.Value.y;
+                newObjective.ObjectiveLocation = new float3(playerBase_p.xy, transform.position.z);
+                newObjective.ObjectiveBounds = new float3(playerBase_rb, 0);
+                float halfXbounds = enemyBase_rb.x * 0.5f;
+                position.x = Random.Range(enemyBase_p.x - halfXbounds + halfSize.x,
+                                          enemyBase_p.x + halfXbounds - halfSize.x);
+                position.y = enemyBase_p.y;
             }
 
             creature.UpdateObjective(
                 newObjective,
                 position,
-                math.distance(playerBase_t.Value.y, enemyBase_t.Value.y) * TestArenaSpeed, // TEMP speed
+                math.distance(playerBase_p.y, enemyBase_p.y) * TestArenaSpeed, // TEMP speed
                 3 // health                
                 );
         } else if(objective.ObjectiveID == 1){
@@ -210,7 +206,6 @@ public class CreatureHandler : MonoBehaviour {
         }
 
     }
-
 
     private void SyncEntities() {
         for (int i = 0; i < CreatureObjectSyncSystem.SyncData.Length; i++) {
@@ -241,8 +236,6 @@ public class CreatureHandler : MonoBehaviour {
             Destroy(gameObject);
         } else {
             Instance = this;
-            //_creaturePool = new Queue<CreatureEntityObject>();
-            //_activeCreatures = new List<CreatureEntityObject>();
 
             _creatures = new List<CreatureEntityObject>();
             _creaturePoolNative = new NativeQueue<CreatureEntityObjectRef>(Allocator.Persistent);
@@ -293,7 +286,6 @@ public class CreatureHandler : MonoBehaviour {
                 var c = ByRef(item);
                 if (c != null) {
                     c.DestroyEntity();
-                    print("[Pool] DestroyedEntity " + c);
                 }
             } while (_creaturePoolNative.TryDequeue(out item));
         }
@@ -323,49 +315,4 @@ public class CreatureHandler : MonoBehaviour {
         _creaturePoolNative.Dispose();
         _activeCreaturesMap.Dispose();
     }
-
-    /*
-    private void ClearCreaturePool() {
-        if (_creaturePoolNative.TryDequeue(out CreatureEntityObjectRef item)) {
-            do {
-                if(item.Creature != null) {
-                    Destroy(item.Creature.gameObject);
-                }
-            } while (_creaturePoolNative.TryDequeue(out item));
-        }
-    }
-
-    private void ClearActiveCreatures() {
-        if (_activeCreatures != null) {
-            for (int i = 0; i < _activeCreatures.Count; i++) {
-                var creature = _activeCreatures[i];
-                if (creature != null)
-                    Destroy(creature.gameObject);
-            }
-            _activeCreatures.Clear();
-        }
-    }
-    private void ClearCreaturePool() {
-        if (_creaturePool != null) {
-            for (int i = 0; i < _activeCreatures.Count; i++) {
-                var creature = _activeCreatures[i];
-                if (creature != null)
-                    Destroy(creature.gameObject);
-            }
-            _activeCreatures.Clear();
-        }
-    }
-
-    private void KillActiveCreatures() {
-        if (_activeCreatures != null) {
-            for (int i = 0; i < _activeCreatures.Count; i++) {
-                var creature = _activeCreatures[i];
-                if (creature != null) {
-                    creature.Kill();
-                    i--;
-                }
-            }
-        }
-    }
-    */
 }

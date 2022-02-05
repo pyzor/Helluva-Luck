@@ -10,6 +10,7 @@ public struct QuadrantSystemData {
     public Entity Entity;
     public float3 Position;
     public int TeamID;
+    public bool IsTargetable;
 }
 
 [BurstCompile]
@@ -19,7 +20,7 @@ public class QuadrantSystem : SystemBase {
     private const float _quadrantCellSize = 0.225f;
     private const float _quadrantCellSizeMulti = 1f / _quadrantCellSize;
     public static NativeMultiHashMap<int, QuadrantSystemData> QuadrantHashMap;
-    public static readonly int HashYScale = 5;
+    public static readonly int HashYScale = 10;
 
     protected override void OnCreate() {
         QuadrantHashMap = new NativeMultiHashMap<int, QuadrantSystemData>(0, Allocator.Persistent);
@@ -47,11 +48,12 @@ public class QuadrantSystem : SystemBase {
             in TargetableData targetable,
             in ActiveStatusData activeStatus
             ) => {
-                if (activeStatus.IsActive && targetable.IsTargetable) {
+                if (activeStatus.IsActive) {
                     hashMapWriter.Add(PositionHash(translation.Value), new QuadrantSystemData {
                         Entity = e,
                         Position = translation.Value,
-                        TeamID = teamMember.TeamID
+                        TeamID = teamMember.TeamID,
+                        IsTargetable = targetable.IsTargetable
                     });
                 }
             }).ScheduleParallel(Dependency).Complete();
