@@ -42,12 +42,14 @@ public class ZoneSliderHandler : MonoBehaviour {
 
     private void Update() {
         SyncEntities();
-        if (!isTest)
-            Test();
     }
 
     private bool isTest = false;
-    private void Test() {
+    public void Test() {
+
+        if (isTest)
+            return;
+
         var EnemyZone_p = EnemyZoneLayoutEntity.Position;
         EnemyZone_p.z = transform.position.z;
         var EnemyZone_rb = EnemyZoneLayoutEntity.RectBounds;
@@ -57,7 +59,7 @@ public class ZoneSliderHandler : MonoBehaviour {
         var PlayerZone_rb = PlayerZoneLayoutEntity.RectBounds;
 
         SpawnSlider(EnemyZone_p, ZoneSliderSpeed, ZoneSliderBounds, (int)Team.Player, new ZoneData { Position = EnemyZone_p, RectBounds = EnemyZone_rb, TeamID = (int)Team.Enemy });
-        
+
         SpawnSlider(PlayerZone_p, -ZoneSliderSpeed, ZoneSliderBounds, (int)Team.Enemy, new ZoneData { Position = PlayerZone_p, RectBounds = PlayerZone_rb, TeamID = (int)Team.Player });
         isTest = true;
     }
